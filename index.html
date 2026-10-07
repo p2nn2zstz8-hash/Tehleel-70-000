@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b1324">
+<title>Tahlil — 70,000 in Memory of Dad</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at top,#18345c,#08111f 65%);color:#fff;display:flex;justify-content:center;padding:18px}
+.memorial{text-align:center;margin:0 auto 24px}
+.memorial-title{font-size:21px;font-weight:750;margin-top:13px}
+.memorial-text{font-size:13px;color:#b9c6d8;line-height:1.55;margin-top:5px}
+.card{width:min(460px,100%);margin:auto;background:rgba(255,255,255,.075);border:1px solid rgba(255,255,255,.14);border-radius:30px;padding:28px 22px;box-shadow:0 25px 80px rgba(0,0,0,.35);backdrop-filter:blur(18px)}
+h1{text-align:center;font-size:29px;margin:0}
+.sub{text-align:center;color:#b9c6d8;margin:7px 0 27px}
+.count{text-align:center;font-size:60px;font-weight:800;line-height:1.05}
+.target{text-align:center;color:#b9c6d8;margin:8px 0 23px}
+.track{height:18px;background:rgba(255,255,255,.12);border-radius:50px;overflow:hidden}
+.bar{height:100%;width:0;background:linear-gradient(90deg,#fff,#8ec5ff);transition:width .35s}
+.percent{text-align:center;margin:10px 0 25px;font-weight:700;color:#dce8f5}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button{border:0;border-radius:16px;padding:16px 8px;font-size:18px;font-weight:750;cursor:pointer;background:#fff;color:#0b1324}
+button:active{transform:scale(.97)}
+.blue{background:#bfdbfe}
+.green{background:#22c55e;color:white}
+.custom{display:flex;gap:8px;margin-top:10px}
+.custom input{flex:1;min-width:0;border:0;border-radius:16px;padding:15px;font-size:17px}
+.custom button{padding:0 20px}
+.status{text-align:center;margin:20px 0 0;color:#aebed2;font-size:13px}
+.dua{margin-top:20px;padding:16px;border-radius:17px;background:rgba(255,255,255,.07);text-align:center;line-height:1.55;color:#dbe6f2}
+.note{text-align:center;color:#71839a;font-size:11px;margin-top:16px}
+</style>
+</head>
+<body>
+<main class="card">
+
+<div class="memorial">
+  <div class="memorial-title">In loving memory of Dad 🤍</div>
+  <div class="memorial-text">70,000 Tahlil for his soul<br>May Allah accept every Tahlil and grant him Jannatul Firdaus. Ameen.</div>
+</div>
+
+<h1>🤲 Tahlil</h1>
+<div class="sub">Our collective goal — 70,000</div>
+<div class="count" id="count">0</div>
+<div class="target">Tahlil completed</div>
+<div class="track"><div class="bar" id="bar"></div></div>
+<div class="percent" id="percent">0% completed</div>
+
+<div class="grid">
+<button class="blue" onclick="add(1)">+1</button>
+<button class="blue" onclick="add(10)">+10</button>
+<button onclick="add(100)">+100</button>
+<button onclick="add(1000)">+1,000</button>
+</div>
+
+<div class="custom">
+<input id="custom" type="number" min="1" placeholder="Enter amount">
+<button onclick="customAdd()">Add</button>
+</div>
+
+<button class="green" style="width:100%;margin-top:10px" onclick="share()">Share on WhatsApp</button>
+
+<div class="status" id="status">Connecting…</div>
+<div class="dua">May Allah accept every Tahlil and reward everyone who participates. 🤍</div>
+<div class="note">One shared counter • Target: 70,000</div>
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCK3_FQarsFbymrgewRqvMAaatkQOXeF1U",
+  authDomain: "tehleel---70-000.firebaseapp.com",
+  databaseURL: "https://tehleel---70-000-default-rtdb.firebaseio.com",
+  projectId: "tehleel---70-000",
+  storageBucket: "tehleel---70-000.firebasestorage.app",
+  messagingSenderId: "480453050559",
+  appId: "1:480453050559:web:af4e35593e1ac62551460a",
+  measurementId: "G-ZPDCM0RH80"
+};
+
+const TARGET=70000;
+const app=initializeApp(firebaseConfig);
+const db=getDatabase(app);
+const countRef=ref(db,"tahlil/count");
+
+const countEl=document.getElementById("count");
+const barEl=document.getElementById("bar");
+const percentEl=document.getElementById("percent");
+const statusEl=document.getElementById("status");
+
+onValue(countRef,(snap)=>{
+  const count=Math.max(0,Number(snap.val()||0));
+  countEl.textContent=count.toLocaleString();
+  const p=Math.min(100,count/TARGET*100);
+  barEl.style.width=p+"%";
+  percentEl.textContent=(p>=100?"100":p.toFixed(1))+"% completed";
+  statusEl.textContent=count>=TARGET ? "🎉 70,000 completed — Alhamdulillah!" : "🟢 Live shared counter";
+},(err)=>{
+  statusEl.textContent="Unable to connect. Check the config.";
+  console.error(err);
+});
+
+window.add=async function(n){
+  if(!Number.isFinite(n)||n<1)return;
+  try{await runTransaction(countRef,c=>Math.min(TARGET,Number(c||0)+n));}
+  catch(e){alert("Could not update counter.");}
+};
+window.customAdd=function(){
+  const n=Number(document.getElementById("custom").value);
+  if(n>0){window.add(n);document.getElementById("custom").value="";}
+};
+window.share=async function(){
+  const count=Number(countEl.textContent.replace(/,/g,""))||0;
+  const text=`🤲 Tahlil — ${count.toLocaleString()} / 70,000 completed\n\nEvery Tahlil counts. May Allah accept it from everyone. 🤍`;
+  if(navigator.share){try{await navigator.share({title:"Tahlil — 70,000",text})}catch(e){}}
+  else if(navigator.clipboard){await navigator.clipboard.writeText(text);alert("Copied!");}
+};
+</script>
+</body>
+</html>
